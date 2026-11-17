@@ -1,0 +1,17 @@
+{
+  "name": "spredin-connector",
+  "version": "0.1.1",
+  "description": "The bridge between Claude and Spredin Pro on the same Mac: the server of the Claude Desktop extension and of the Spredin Pro plugin.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "GGHomology",
+  "homepage": "https://spredin.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GGHomology/Spredin-connector.git"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

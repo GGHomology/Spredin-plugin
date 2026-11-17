@@ -1,0 +1,25 @@
+Month,Region,Customer,Units,Price
+January,North,Fern Hotels,58,7.25
+January,North,Cedar & Co,9,4.5
+January,South,Aster Foods,19,18.9
+January,South,Cedar & Co,36,18.9
+January,East,Fern Hotels,15,7.25
+January,East,Fern Hotels,60,4.5
+January,West,Blue Harbour,39,4.5
+January,West,Cedar & Co,5,7.25
+February,North,Cedar & Co,27,4.5
+February,North,Elm Street Cafe,38,7.25
+February,South,Delta Supply,14,7.25
+February,South,Elm Street Cafe,19,4.5
+February,East,Delta Supply,32,7.25
+February,East,Aster Foods,59,18.9
+February,West,Blue Harbour,57,12.0
+February,West,Elm Street Cafe,14,18.9
+March,North,Delta Supply,54,12.0
+March,North,Aster Foods,9,12.0
+March,South,Cedar & Co,43,18.9
+March,South,Fern Hotels,47,7.25
+March,East,Delta Supply,52,12.0
+March,East,Fern Hotels,49,12.0
+March,West,Fern Hotels,54,4.5
+March,West,Fern Hotels,17,12.0

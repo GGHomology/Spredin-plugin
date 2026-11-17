@@ -1,0 +1,15 @@
+{
+  "name": "spredin",
+  "description": "Spredin Pro's plugin for Claude: the skill and Spredin Pro's tools.",
+  "owner": {
+    "name": "GGHomology",
+    "url": "https://spredin.com"
+  },
+  "plugins": [
+    {
+      "name": "spredin-pro",
+      "source": "./plugins/spredin-pro",
+      "description": "Work in Spredin Pro, the Excel-compatible spreadsheet app."
+    }
+  ]
+}

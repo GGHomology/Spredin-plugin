@@ -1,0 +1,262 @@
+{
+  "generatedFrom": "Spredin Pro 1.0.4 (src/agent/tools.ts) by tools/gen-tools.mts. Do not edit by hand.",
+  "tools": [
+    {
+      "name": "describe_sheet",
+      "description": "One sheet’s structure: data blocks, first rows, column types, a sample row. No sheet: the list of sheets (from=N for the ones the list stopped before).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sheet": {
+            "type": "string",
+            "description": "Sheet name"
+          },
+          "from": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "read_range",
+      "description": "Cells in a range, e.g. Sales!A1:D20 or Sales!B:B. At most 400 cells; text cut at 80 chars unless you read one cell. formulas=true adds each formula.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "description": "A1 range, sheet-qualified"
+          },
+          "formulas": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "range"
+        ]
+      }
+    },
+    {
+      "name": "aggregate",
+      "description": "Totals of a table (first row = headers): count, sum, avg per numeric column, grouped by a column.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "description": "Table range incl. header, e.g. Sales!A1:F73"
+          },
+          "by": {
+            "type": "string",
+            "description": "Group by this column (header or letter)"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Only these columns"
+          }
+        },
+        "required": [
+          "range"
+        ]
+      }
+    },
+    {
+      "name": "find",
+      "description": "Cells whose shown value contains the text (any case). Up to 30.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Text to find"
+          },
+          "sheet": {
+            "type": "string",
+            "description": "Only this sheet"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    },
+    {
+      "name": "get_selection",
+      "description": "What the user has selected in the grid right now.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "write_cells",
+      "description": "Write rows of cell texts from a top-left cell, e.g. start=Sales!F1; =… is a formula. Formula column: header + ONE formula row with fill_down=true (copied to the end of the table beside it, refs shifting). To clean or convert a column use run_python, not retyped values.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "description": "Top-left cell, sheet-qualified"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Rows of cell texts"
+          },
+          "fill_down": {
+            "type": "boolean",
+            "description": "Copy the last row down to the end of the adjacent table"
+          }
+        },
+        "required": [
+          "start",
+          "values"
+        ]
+      }
+    },
+    {
+      "name": "run_python",
+      "description": "Run Python on the workbook; print() comes back with where it wrote. `sheet` is ALWAYS the active sheet; for any other, keep a handle and read and write through it: c=sheet.book('Customers'); df=c.read() (row 1 = columns); c.write(df,'A1') writes the column names as its first row too (header=False: values only). New sheet: n=sheet.add_sheet('Name'); n.write(df,'A1'). Nothing is pre-imported: import pandas as pd. Dates arrive as Excel serial days: pd.to_datetime(df['Date'], unit='D', origin='1899-12-30'). n.chart('A1:C9','line','Title').",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Python source"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      }
+    },
+    {
+      "name": "memory",
+      "description": "This workbook's notes (ASSISTANT.md, kept in the file). When the user asks you to remember, correct or forget something about it: append, replace (find = exact passage) or rewrite.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "read",
+              "append",
+              "replace",
+              "rewrite"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "The note / new passage"
+          },
+          "find": {
+            "type": "string",
+            "description": "replace: exact passage"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      }
+    },
+    {
+      "name": "slides",
+      "description": "Slide decks, LINKED to cells. read: decks, sheet charts, pivots; deck= its slides; +slide= that slide in full. export{deck,format pdf|html} (save panel). present{deck,slide?}. edit: ops, all-or-nothing: add_slide{title,layout?,subtitle?,blocks?,arrange?,notes?,at?}, update_slide{slide,…}, delete_slide|duplicate_slide{slide}, move_slide{slide,to}, add_block{slide,at?,+content}, update_block{slide,block,+content}, delete_block{slide,block}, move_block|copy_block{slide,block,to?,to_slide?}, set_theme{theme}, set_size{size: wide|4:3|a4|letter|square|vertical…}, set_ink{slide,strokes:[{tool:pen|highlighter,color,w,pts:[x,y,…]}]|null} (ink, slide px), set_style{bg,text,accent,accent2,panel,font,heading_font,palette name|shuffle,reset}, save_theme{name}, rename_deck{name}, delete_deck, freeze|unfreeze (frozen: values kept; still takes notes, style_title, move_slide, set_ink, look). Each op is {\"op\":\"add_block\",\"slide\":2,\"chart\":\"Sales!A1:B9\"}. Content is ONE of text, table, chart, kpis, image, shape, math, anim, control, code: table/chart Sheet!A1:E9, a name, table or sheet (pivot); chart {source,type} or {id}; kpis [[label,cell|=formula,compare?,format? 0.0%|percent]]; image {svg:\"<svg…>\" you draw (no script/links) or asset:\"img-…\", alt, fit}; shape {shape:rect|ellipse|arrow|callout|star|arc|line…, text, settings}; both: rotation, flip_h, flip_v, opacity; style_block colours them; math \"TeX\" ($…$ in text too), anim (from cells), control (sets a cell), code (a script), build_block (on click n): see read{help:\"teach\"}. ≤12 blocks/slide on an aligned grid (side by side: no placing); place_block{slide,block,x,y,w,h} for sizes the grid cannot give (body x 80–1200, y 160–650); size_block{slide,block,size 10–120|auto} text px; layer_block{slide,block,layer int (higher in front, <0 under the title)|to front|back,opacity .05–1}; style_block{slide,block,bold,italic,underline,align,valign,color|fill|border|header_fill|header_color,font,border_width,dashed,radius,padding}, style_title{slide,italic,underline,align,color,size 20-96,font}: colours #hex or text|accent|accent2|panel|background (follow the theme); null removes. Text: - bullets, **bold**, *italic*. Numbers in text {{=Sheet!B7}}, never typed. From 1.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "read",
+              "edit",
+              "export",
+              "present"
+            ]
+          },
+          "deck": {
+            "type": "string",
+            "description": "Deck name"
+          },
+          "create": {
+            "type": "boolean"
+          },
+          "ops": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "pdf",
+              "html"
+            ]
+          },
+          "slide": {
+            "type": "integer"
+          },
+          "help": {
+            "type": "string",
+            "description": "teach"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      }
+    },
+    {
+      "name": "python_help",
+      "description": "Full Python sheet API reference (long — only if run_python’s summary is not enough).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "list_workbooks",
+      "description": "List the workbooks open in Spredin Pro, marking with * the one the other tools act on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "use_workbook",
+      "description": "Make the other tools act on the open workbook with this name: the exact name, or the only name containing it (case is ignored). Lasts until another use_workbook or until that workbook closes.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The workbook's name as list_workbooks shows it, or part of it."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "connect_spredin",
+      "description": "Connect to Spredin Pro again: Spredin Pro asks the user to allow it and shows a code, which you show the user too. Call this only when the user asks to connect or reconnect to Spredin Pro, never on your own.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    }
+  ]
+}

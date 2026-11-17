@@ -1,0 +1,12 @@
+{
+  "skill": {
+    "repository": "https://github.com/GGHomology/Spredin-skill",
+    "commit": "e1ab149abece74583fc290d64189019b4a6aa048",
+    "version": "0.2.1"
+  },
+  "connector": {
+    "repository": "https://github.com/GGHomology/Spredin-connector",
+    "commit": "d923fa52eb07ccf477e8021b9e7b85d83b86b6b6",
+    "version": "0.1.1"
+  }
+}
