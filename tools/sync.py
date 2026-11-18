@@ -16,8 +16,8 @@ them:
 The source folders default to ../spredin-skill and ../spredin-connector
 beside this repository. Each must be a git checkout whose copied files have
 no changes not committed: what is copied is what a commit holds, so
-SOURCES.json, which records the two commits, says exactly where every copied
-byte came from. Files the copy no longer has are removed from the plugin; the
+SOURCES.json, which records for each the commit that last changed the copied
+files, says exactly where every copied byte came from. Files the copy no longer has are removed from the plugin; the
 plugin's own files (its manifest, .mcp.json, README.md, LICENSE) are never
 touched.
 
@@ -82,8 +82,10 @@ def committed(repo, blob):
     return git(repo, "cat-file", "blob", blob)
 
 
-def head(repo):
-    return git(repo, "rev-parse", "HEAD").decode().strip()
+def last_change(repo, paths):
+    """The commit that last changed any of `paths`: what the copy is from, so a
+    commit that touches only other files (a README) changes nothing here."""
+    return git(repo, "log", "-1", "--format=%H", "HEAD", "--", *paths).decode().strip()
 
 
 def plan(skill_repo, connector_repo):
@@ -116,8 +118,10 @@ def plan(skill_repo, connector_repo):
     files["package.json"] = (json.dumps(pkg, indent=2, ensure_ascii=False) + "\n").encode()
 
     sources = {
-        "skill": {"repository": REPOS["skill"], "commit": head(skill_repo), "version": version.get("skill", "")},
-        "connector": {"repository": REPOS["connector"], "commit": head(connector_repo), "version": pkg.get("version", "")},
+        "skill": {"repository": REPOS["skill"], "commit": last_change(skill_repo, [SKILL_DIR, "VERSION"]),
+                  "version": version.get("skill", "")},
+        "connector": {"repository": REPOS["connector"], "commit": last_change(connector_repo, SERVER_FILES + ["package.json"]),
+                      "version": pkg.get("version", "")},
     }
     return files, (json.dumps(sources, indent=2) + "\n").encode()
 
