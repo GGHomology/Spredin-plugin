@@ -156,12 +156,12 @@ export const INSTRUCTIONS =
 
 /**
  * How the user updates this program. The same server runs in the Claude
- * Desktop extension (the .mcpb) and in the Spredin Pro plugin, whose
+ * Desktop extension (the .mcpb) and in the Spredin Pro Tools plugin, whose
  * .mcp.json sets SPREDIN_CONNECTOR_HOST=plugin; only the advice differs.
  */
 export const UPDATE_ADVICE = {
   extension: 'update the Spredin Pro extension in Claude Desktop → Settings → Extensions',
-  plugin: 'update the Spredin Pro plugin (in Claude Code, /plugin; in the Claude app, Customize → Plugins)',
+  plugin: 'update the Spredin Pro Tools plugin (in Claude Code, /plugin)',
 };
 
 export const MESSAGES = {

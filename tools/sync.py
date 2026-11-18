@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
-"""Copy the skill and the connector's server into the plugin folder.
+"""Copy the skill and the connector's server into the two plugins.
 
     python3 tools/sync.py [--skill DIR] [--connector DIR] [--check]
 
-The plugin is made of two other repositories, as their last commits hold
+The plugins are made of two other repositories, as their last commits hold
 them:
 
 - the skill (GGHomology/Spredin-skill): every file git tracks under
-  skills/spredin-pro, copied to plugins/spredin-pro/skills/spredin-pro;
+  skills/spredin-pro except its scripts/ folder, copied to
+  plugins/spredin-pro/skills/spredin-pro. That plugin is the one in
+  Anthropic's directory, which takes no scripts from an organization it has
+  not verified; the skill says what to do without scripts/sprd.py;
 - the connector (GGHomology/Spredin-connector): server/index.js,
   server/connector.js and server/tools.json, copied to
-  plugins/spredin-pro/server, and its package.json without "scripts" (which
-  name tools the plugin does not carry), copied to plugins/spredin-pro.
+  plugins/spredin-pro-tools/server, and its package.json without "scripts"
+  (which name tools the plugin does not carry), copied to
+  plugins/spredin-pro-tools.
 
 The source folders default to ../spredin-skill and ../spredin-connector
 beside this repository. Each must be a git checkout whose copied files have
 no changes not committed: what is copied is what a commit holds, so
 SOURCES.json, which records for each the commit that last changed the copied
 files, says exactly where every copied byte came from. Files the copy no longer has are removed from the plugin; the
-plugin's own files (its manifest, .mcp.json, README.md, LICENSE) are never
-touched.
+plugins' own files (manifests, .mcp.json, READMEs, licences, icons) are
+never touched.
 
 --check changes nothing and exits 1 when the plugin is not what a sync would
 make (the tests run it).
@@ -33,12 +37,16 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(ROOT, "plugins", "spredin-pro")
+SKILL_PLUGIN = "plugins/spredin-pro"
+TOOLS_PLUGIN = "plugins/spredin-pro-tools"
 SOURCES = os.path.join(ROOT, "SOURCES.json")
 SKILL_DIR = "skills/spredin-pro"
+LEFT_OUT = SKILL_DIR + "/scripts/"
 SERVER_FILES = ["server/index.js", "server/connector.js", "server/tools.json"]
-# The folders a sync owns inside the plugin: anything else in them is removed.
-OWNED = ["skills", "server"]
+# The folders and files a sync owns (relative to this repository): anything
+# else in the folders is removed.
+OWNED_DIRS = [SKILL_PLUGIN + "/skills", TOOLS_PLUGIN + "/server"]
+OWNED_FILES = [TOOLS_PLUGIN + "/package.json"]
 REPOS = {
     "skill": "https://github.com/GGHomology/Spredin-skill",
     "connector": "https://github.com/GGHomology/Spredin-connector",
@@ -97,7 +105,8 @@ def plan(skill_repo, connector_repo):
     if f"{SKILL_DIR}/SKILL.md" not in skill:
         raise SyncError(f"{skill_repo} has no {SKILL_DIR}/SKILL.md")
     for path, blob in skill.items():
-        files[path] = committed(skill_repo, blob)
+        if not path.startswith(LEFT_OUT):
+            files[f"{SKILL_PLUGIN}/{path}"] = committed(skill_repo, blob)
     version = {}
     for line in committed(skill_repo, tracked(skill_repo, ["VERSION"])["VERSION"]).decode().splitlines():
         if ": " in line:
@@ -109,13 +118,13 @@ def plan(skill_repo, connector_repo):
     for path in SERVER_FILES:
         if path not in conn:
             raise SyncError(f"{connector_repo} has no {path}")
-        files[path] = committed(connector_repo, conn[path])
+        files[f"{TOOLS_PLUGIN}/{path}"] = committed(connector_repo, conn[path])
     pkg = json.loads(committed(connector_repo, conn["package.json"]))
     pkg.pop("scripts", None)
     for key in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
         if pkg.get(key):
             raise SyncError(f"the connector's package.json has {key}; the plugin carries no packages")
-    files["package.json"] = (json.dumps(pkg, indent=2, ensure_ascii=False) + "\n").encode()
+    files[f"{TOOLS_PLUGIN}/package.json"] = (json.dumps(pkg, indent=2, ensure_ascii=False) + "\n").encode()
 
     sources = {
         "skill": {"repository": REPOS["skill"], "commit": last_change(skill_repo, [SKILL_DIR, "VERSION"]),
@@ -127,19 +136,19 @@ def plan(skill_repo, connector_repo):
 
 
 def on_disk():
-    """{plugin path: bytes} of the files now in the folders a sync owns, and package.json."""
+    """{path: bytes} of the files now in what a sync owns."""
     out = {}
-    for top in OWNED:
-        base = os.path.join(PLUGIN, top)
-        for d, _dirs, names in os.walk(base):
+    for top in OWNED_DIRS:
+        for d, _dirs, names in os.walk(os.path.join(ROOT, top)):
             for n in names:
                 full = os.path.join(d, n)
                 with open(full, "rb") as f:
-                    out[os.path.relpath(full, PLUGIN).replace(os.sep, "/")] = f.read()
-    pkg = os.path.join(PLUGIN, "package.json")
-    if os.path.exists(pkg):
-        with open(pkg, "rb") as f:
-            out["package.json"] = f.read()
+                    out[os.path.relpath(full, ROOT).replace(os.sep, "/")] = f.read()
+    for rel in OWNED_FILES:
+        full = os.path.join(ROOT, rel)
+        if os.path.exists(full):
+            with open(full, "rb") as f:
+                out[rel] = f.read()
     return out
 
 
@@ -158,15 +167,15 @@ def differences(files, sources):
 def write(files, sources):
     now = on_disk()
     for path in sorted(set(now) - set(files)):
-        os.remove(os.path.join(PLUGIN, path))
+        os.remove(os.path.join(ROOT, path))
     for path, data in sorted(files.items()):
-        full = os.path.join(PLUGIN, path)
+        full = os.path.join(ROOT, path)
         os.makedirs(os.path.dirname(full), exist_ok=True)
         if now.get(path) != data:
             with open(full, "wb") as f:
                 f.write(data)
-    for top in OWNED:  # drop folders the removals left empty
-        for d, dirs, names in os.walk(os.path.join(PLUGIN, top), topdown=False):
+    for top in OWNED_DIRS:  # drop folders the removals left empty
+        for d, dirs, names in os.walk(os.path.join(ROOT, top), topdown=False):
             if not dirs and not names:
                 os.rmdir(d)
     with open(SOURCES, "wb") as f:
@@ -174,7 +183,7 @@ def write(files, sources):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="sync.py", description="Copy the skill and the connector's server into the plugin.")
+    p = argparse.ArgumentParser(prog="sync.py", description="Copy the skill and the connector's server into the plugins.")
     p.add_argument("--skill", default=os.path.join(os.path.dirname(ROOT), "spredin-skill"))
     p.add_argument("--connector", default=os.path.join(os.path.dirname(ROOT), "spredin-connector"))
     p.add_argument("--check", action="store_true", help="change nothing; exit 1 if a sync would change the plugin")

@@ -29,6 +29,7 @@ pairing.json
 
 # Workbooks a maintainer tried things on
 *.sprd
+!review/*.sprd
 *.xlsx
 *.xls
 *.csv

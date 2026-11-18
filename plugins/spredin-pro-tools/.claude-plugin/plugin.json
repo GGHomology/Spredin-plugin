@@ -1,0 +1,20 @@
+{
+  "name": "spredin-pro-tools",
+  "displayName": "Spredin Pro Tools",
+  "version": "0.1.2",
+  "description": "Spredin Pro's tools for Claude Code: read the workbooks open in Spredin Pro on the same computer and change them, each change asking you in Spredin Pro first unless you turned that off.",
+  "author": {
+    "name": "GGHomology",
+    "url": "https://spredin.com"
+  },
+  "homepage": "https://spredin.com",
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "keywords": [
+    "spreadsheet",
+    "excel",
+    "workbook",
+    "spredin",
+    "mcp-server"
+  ]
+}

@@ -1,8 +1,8 @@
 {
   "name": "spredin-pro",
   "displayName": "Spredin Pro",
-  "version": "0.1.0",
-  "description": "Work in Spredin Pro, the Excel-compatible spreadsheet app: read and change the open workbooks (each change asks you in Spredin Pro first), read and write its files, and write scripts for its Python panel.",
+  "version": "0.2.0",
+  "description": "Helps Claude work in Spredin Pro, the Excel-compatible spreadsheet app: operating it on screen, its menus and formulas, reading and writing its workbook files, and writing scripts for its Python panel.",
   "author": {
     "name": "GGHomology",
     "url": "https://spredin.com"

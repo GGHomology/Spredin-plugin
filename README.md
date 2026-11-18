@@ -1,38 +1,47 @@
-# Spredin Pro plugin for Claude
+# Spredin Pro plugins for Claude
 
-The plugin for Anthropic's plugin directory and for Claude Code: Spredin Pro's
-skill and Spredin Pro's tools in one folder. The plugin is
-[`plugins/spredin-pro`](plugins/spredin-pro); its README is what people read
-before they install it.
+Two plugins for [Spredin Pro](https://spredin.com), the Excel-compatible
+spreadsheet app. This repository is also a marketplace that lists both.
 
-This repository is also a marketplace (`.claude-plugin/marketplace.json`), so
-the plugin can be added by the repository's name before, or without, a
-directory listing:
+| Plugin | What it is | Where |
+|---|---|---|
+| [`plugins/spredin-pro`](plugins/spredin-pro) | The Spredin Pro skill: how the app, its formulas, its files and its Python panel work. Markdown only. | Anthropic's plugin directory, and this marketplace |
+| [`plugins/spredin-pro-tools`](plugins/spredin-pro-tools) | Spredin Pro's tools for Claude Code: read and change the workbooks open in Spredin Pro, each change asking you there first. A local server. | This marketplace only |
 
 ```text
 /plugin install spredin-pro --marketplace GGHomology/Spredin-plugin
+/plugin install spredin-pro-tools --marketplace GGHomology/Spredin-plugin
 ```
 
-## Where its parts come from
+Anthropic's directory takes no local servers or scripts from an organization
+it has not verified, so the tools are a plugin of their own, and the
+directory's copy of the skill leaves out `scripts/sprd.py` (the skill says what
+to do without it). In Claude Desktop's chat, the tools come from the Spredin
+Pro extension: <https://github.com/GGHomology/Spredin-connector/releases/latest>.
+Add the skill from the directory or from here, not both.
 
-The plugin is made of two other repositories. Nothing in its `skills/` and
-`server/` folders is edited here:
+## Where their parts come from
 
-| In the plugin | From | Path there |
+Nothing in the plugins' `skills/` and `server/` folders is edited here:
+
+| In | From | Path there |
 |---|---|---|
-| `skills/spredin-pro/` | [Spredin-skill](https://github.com/GGHomology/Spredin-skill) | `skills/spredin-pro/` |
-| `server/index.js`, `server/connector.js`, `server/tools.json` | [Spredin-connector](https://github.com/GGHomology/Spredin-connector) | `server/` |
-| `package.json` | Spredin-connector | `package.json`, without `scripts` |
+| `plugins/spredin-pro/skills/spredin-pro/` | [Spredin-skill](https://github.com/GGHomology/Spredin-skill) | `skills/spredin-pro/`, without `scripts/` |
+| `plugins/spredin-pro-tools/server/` | [Spredin-connector](https://github.com/GGHomology/Spredin-connector) | `server/index.js`, `connector.js`, `tools.json` |
+| `plugins/spredin-pro-tools/package.json` | Spredin-connector | `package.json`, without `scripts` |
 
-The rest of the plugin (`.claude-plugin/plugin.json`, `.mcp.json`,
-`README.md`, `LICENSE`, `assets/icon.png`) is written here. `SOURCES.json`
-records the commit each copy came from.
+The rest (each plugin's `.claude-plugin/plugin.json`, the tools plugin's
+`.mcp.json`, the READMEs, licences and icons) is written here. `SOURCES.json`
+records, for each source, the commit that last changed what was copied.
 
-The server is the same program as the Claude Desktop extension (the `.mcpb`).
-The plugin's `.mcp.json` starts it with `SPREDIN_CONNECTOR_HOST=plugin`,
-which changes only how it tells the user to update it.
+The tools plugin's server is the same program as the Claude Desktop
+extension. Its `.mcp.json` starts it with `SPREDIN_CONNECTOR_HOST=plugin`,
+which changes only how it tells the user to update it. Its version is the
+connector's.
 
-## Update the plugin
+`review/` holds the notes and sample files for Anthropic's reviewers.
+
+## Update the plugins
 
 1. Commit the change in the skill's or the connector's repository, with their
    tests passing.
@@ -41,9 +50,10 @@ which changes only how it tells the user to update it.
    longer have, and rewrites `SOURCES.json`. The source checkouts default to
    `../spredin-skill` and `../spredin-connector`; `--skill` and `--connector`
    name others.
-3. Raise `version` in `plugins/spredin-pro/.claude-plugin/plugin.json`. The
-   directory takes a new version only when it changes.
-4. Run the tests and `claude plugin validate .`, then commit.
+3. Raise `version` in the changed plugin's `.claude-plugin/plugin.json`: the
+   directory takes a new version only when it changes, and the tools plugin's
+   version is the connector's.
+4. Run the tests and `claude plugin validate` on each plugin, then commit.
 
 ## Test
 
@@ -51,25 +61,20 @@ which changes only how it tells the user to update it.
 python3 -m unittest discover -s tests -v
 ```
 
-`tests/test_plugin.py` checks the plugin against Anthropic's pre-submission
-checklist (read 2026-11-18): the manifest and its name, the README's length
-and the licence, the icon, file names, sizes and kinds, no links, lockfiles
-or package sources, the MCP server started as `node` on a file in the plugin,
-the server importing only Node's own modules and its own files and running
-nothing but `lsof`, no private paths or key-like text, and that the copies
-are what the two sources make (when they are checked out beside this one).
-It also starts the plugin's own copy of the server, as `.mcp.json` says, on
-empty random ports with a pairing file in a temporary folder: it must list
-the tools with titles and annotations, and say how to reach Spredin Pro.
-Set `SPREDIN_PLUGIN_DENYLIST` to a file of private words (one a line) to
-check that none appears.
-
-Claude Code's own check:
-
-```text
-claude plugin validate .
-claude plugin validate ./plugins/spredin-pro
-```
+`tests/test_plugin.py` checks both plugins against Anthropic's pre-submission
+checklist (read 2026-11-18), and the directory plugin also against the rule
+the developer portal gave that day for an organization it has not verified:
+Markdown, text, JSON, YAML and images only, nothing that starts with `#!`, no
+local server, hooks or other commands, no package manager files, and front
+matter strict YAML reads. For the tools plugin it checks the server: started
+as `node` on a file in the plugin, importing only Node's own modules and its
+own files, running nothing but `lsof`, and installing nothing. Across the
+repository: no hidden characters or HTML comments, no private paths or
+key-like text, and that the copies are what the two sources make (when they
+are checked out beside this one). It also starts the tools plugin's server as
+`.mcp.json` says, on empty random ports with a pairing file in a temporary
+folder. Set `SPREDIN_PLUGIN_DENYLIST` to a file of private words (one a line)
+to check that none appears.
 
 ## Licence
 

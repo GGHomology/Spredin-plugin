@@ -1,6 +1,6 @@
 {
   "name": "spredin",
-  "description": "Spredin Pro's plugin for Claude: the skill and Spredin Pro's tools.",
+  "description": "Spredin Pro for Claude: the skill, and Spredin Pro's tools for Claude Code.",
   "owner": {
     "name": "GGHomology",
     "url": "https://spredin.com"
@@ -9,7 +9,12 @@
     {
       "name": "spredin-pro",
       "source": "./plugins/spredin-pro",
-      "description": "Work in Spredin Pro, the Excel-compatible spreadsheet app."
+      "description": "The Spredin Pro skill: how the app, its files and its Python panel work."
+    },
+    {
+      "name": "spredin-pro-tools",
+      "source": "./plugins/spredin-pro-tools",
+      "description": "Spredin Pro's tools for Claude Code: read and change the open workbooks, with your approval in Spredin Pro."
     }
   ]
 }

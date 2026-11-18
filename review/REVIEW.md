@@ -1,83 +1,62 @@
 # For Anthropic's reviewers
 
-How to try the Spredin Pro plugin end to end. The plugin's own README
-(`plugins/spredin-pro/README.md`) says what it runs, sends and keeps.
+How to try the Spredin Pro plugin. It is a skill, Markdown only: it teaches
+Claude how Spredin Pro works (the app, its formulas, its files and its Python
+panel). It runs nothing and connects to nothing. Its README
+(`plugins/spredin-pro/README.md`) is the listing text.
 
 ## What you need
 
-- **A Mac** with macOS 13 or later, and **Spredin Pro 1.0.4 or later** from
-  the Mac App Store. Spredin Pro is a paid app; we give reviewers App Store
-  promo codes. Ask through <https://spredin.com/support>, or in the
-  submission's review thread, and we send them there.
-- **Node.js 18 or later** on that Mac, for the plugin's tools.
-- **Claude Code**, for the tools. In chat, only the skill loads (chat does not
-  start a plugin's local server).
-- **The sample data**: [`sample-sales.csv`](sample-sales.csv) in this folder,
-  24 orders (Month, Region, Customer, Units, Price).
-
-## Set up
-
-1. Open Spredin Pro. Choose **Settings → Connect AI Apps** and turn on **Allow
-   AI apps on this Mac to connect**.
-2. In Spredin Pro, choose **File → Open…** and open `sample-sales.csv`.
-3. Start Claude Code with the plugin, from a checkout of this repository:
-
-   ```text
-   claude --plugin-dir ./plugins/spredin-pro
-   ```
-
-   or install it: `/plugin install spredin-pro --marketplace GGHomology/Spredin-plugin`.
+- **Claude with code execution on** (Settings → Capabilities), in chat, Cowork
+  or Claude Code.
+- **The sample files** in this folder:
+  - [`sample-sales.csv`](sample-sales.csv): 24 orders (Month, Region,
+    Customer, Units, Price);
+  - [`sample-sales.sprd`](sample-sales.sprd): the same orders as a Spredin
+    workbook, with a Revenue column of formulas (`=D2*E2` …), a Total row, a
+    second sheet "Rates" and a defined name `GST`.
+- **Optional, for the prompts that use the app:** a Mac with Spredin Pro 1.0.4
+  or later from the Mac App Store. It is a paid app; we give reviewers App
+  Store promo codes. Ask through <https://spredin.com/support> or in the
+  submission's review, and we send them there.
 
 ## Prompts to try, and what to expect
 
-1. **"What is the revenue (Units × Price) by region in the workbook open in
-   Spredin?"**
-   - The first time, Claude shows a six-character code, and Spredin Pro asks
-     **Allow Claude to use Spredin?** with a code. Click Allow when they match.
-     Claude then answers without asking again.
-   - Expected: East 2,937.85; South 2,379.95; North 1,614.00; West 1,607.35;
-     8,539.15 in all. Reading asks for no approval.
-2. **"Which three orders brought in the most, and from which customers?"**
-   - Expected: Aster Foods (East, February) 1,115.10; Cedar & Co (South,
-     March) 812.70; Blue Harbour (West, February) 684.00.
-3. **"Add a Revenue column that multiplies Units by Price, as formulas, with
-   a total under it."**
-   - Spredin Pro shows a card, **Claude asks to: …**, with Allow and Don't
-     Allow. Allow: the column appears as live formulas (`=D2*E2` and so on),
-     and its total is 8,539.15. Each change Claude makes is one undo step in
-     Spredin Pro (⌘Z).
-   - Don't Allow instead: nothing changes, and Claude is told so.
-4. **"Make a pivot of units by region and month on a new sheet."**
-   - A card first, then a new pivot sheet. East's units: January 75,
-     February 91, March 101.
-5. **The skill alone** (in a chat, where the tools do not load): **"In
-   Spredin Pro, how do I freeze the header row, and what does ⌘K do?"**
-   - Claude answers from the skill: Rows/Cols → Freeze Top Row (or ⌘K, then
-     "freeze top row"); ⌘K opens the command palette, which runs any command
-     by name.
+1. **Attach `sample-sales.sprd`, then: "What is in this Spredin workbook, and
+   which formulas does it have?"**
+   - Claude reads the file with Python's `gzip` and `json` (the skill explains
+     the format) and reports two sheets: Sales, A1:F26, with 24 Revenue
+     formulas `=D2*E2` … `=D25*E25` and two totals `=SUM(D2:D25)` and
+     `=SUM(F2:F25)`; Rates, with the name GST pointing at `Rates!$B$2`.
+   - It says the file holds formulas, not their results: Spredin Pro works them
+     out when it opens the file.
+2. **Attach `sample-sales.csv`, then: "Make a workbook from this that opens in
+   Spredin Pro, with Revenue (Units × Price) as formulas and a total row."**
+   - Claude writes an `.xlsx` (openpyxl) or a `.csv`, with formulas such as
+     `=D2*E2`. Opened in Spredin Pro, the Revenue total is 8,539.15.
+3. **"Write a script for Spredin Pro's Python panel that adds a Revenue column
+   to the active sheet (Units × Price) as formulas, with a total under it."**
+   - Claude writes a script using Spredin's API (`sheet.set_cell`,
+     `sheet.fill_down`, `sheet.style`), with formulas rather than computed
+     numbers. Pasted into Spredin Pro's Python panel and run on the CSV's sheet,
+     it adds the column; the total is 8,539.15.
+4. **"In Spredin Pro, how do I freeze the header row, and what does ⌘K do?"**
+   - Rows/Cols → Freeze Top Row (or ⌘K, then "freeze top row"); ⌘K opens the
+     command palette, which runs any command by name.
+5. **"Why does Spredin Pro keep `007` and a 19-digit account number as text
+   when Excel turns them into numbers?"**
+   - Claude explains Spredin Pro's rule: a digit string with leading zeros, or
+     more than 15 digits, stays text so no digit is lost; Excel turns them into
+     numbers (`7`, and a number rounded to 15 digits).
 
-## The edges
+## What the skill does not do
 
-- **Disconnect:** in Spredin Pro, Settings → Connect AI Apps lists Claude;
-  Disconnect it. The next tool call says Spredin Pro does not accept the
-  connection, and Claude does not connect again unless you ask it to
-  (it then calls `connect_spredin`, and Spredin Pro asks again).
-- **Connect AI Apps off:** every call says Spredin Pro is not open or its
-  connection is off, and nothing is read or changed.
-- **Cowork:** a Cowork task runs the server in a virtual machine, where
-  every call says the tools work only on the computer where Spredin Pro runs,
-  and the server connects to nothing (seen 2026-11-18). The skill still loads
+- It has no programs, server, hooks or settings, and makes no network calls.
+- Spredin Pro's tools (reading and changing the workbooks open in the app)
+  are not part of this plugin. They come separately: the Spredin Pro
+  extension for Claude Desktop, and the Spredin Pro Tools plugin for Claude
+  Code in this repository's own marketplace. The skill uses them when they are
   there.
-
-## What the server runs
-
-`node ${CLAUDE_PLUGIN_ROOT}/server/index.js`, which imports
-`server/connector.js` (readable source, Node's own modules only, no
-dependencies). Before it asks Spredin Pro to pair, it runs `/usr/sbin/lsof`
-to check that the program on Spredin Pro's port runs under the same user
-account; it runs no other program. It connects only to `127.0.0.1`, ports
-41870 to 41877, and keeps one file, its pairing file, in
-`~/Library/Application Support/Spredin Connector/`.
 
 Privacy policy: <https://spredin.com/privacy>. Support:
 <https://spredin.com/support>.
