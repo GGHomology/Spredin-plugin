@@ -8,6 +8,11 @@
     "url": "https://spredin.com"
   },
   "homepage": "https://spredin.com",
+  "repository": "https://github.com/GGHomology/Spredin-plugin",
+  "documentationUrl": "https://github.com/GGHomology/Spredin-plugin/blob/main/plugins/spredin-pro/README.md",
+  "privacyPolicyUrl": "https://spredin.com/privacy",
+  "supportUrl": "https://spredin.com/support",
+  "termsOfServiceUrl": "https://spredin.com/terms",
   "license": "MIT",
   "icon": "assets/icon.png",
   "keywords": [
